@@ -1,4 +1,6 @@
 __license__ = "LGPLv3"
+# Original: Copyright (C) 2022 Ipek Gokce — https://github.com/badapplexx/ANCAT
+# Modified: Copyright (C) 2026 Marco Santoriello
 
 import pandas as pd
 from dijkstar import Graph, find_path
@@ -187,8 +189,8 @@ headerList = sheet3.columns.tolist()
 
 sourceNameColumn = (sheet3[sheet3_column1Name].values.tolist())[0:endOfFile]
 # UniqEndSystemNameList = pd.unique((sheet3[sheet3_column1Name].values.tolist())[0:endOfFile])
-UniqEndSystemNameList1 = (pd.unique((sheet1[sheet1_column1Name].values.tolist())[0:endOfFile])).tolist()
-UniqEndSystemNameList2 = (pd.unique((sheet1[sheet1_column2Name].values.tolist())[0:endOfFile])).tolist()
+UniqEndSystemNameList1 = list(set(x for x in sheet1[sheet1_column1Name].values.tolist() if isinstance(x, str)))
+UniqEndSystemNameList2 = list(set(x for x in sheet1[sheet1_column2Name].values.tolist() if isinstance(x, str)))
 UniqEndSystemNameList = set(UniqEndSystemNameList1+ UniqEndSystemNameList2)
 
 ############################# PART2 #############################
