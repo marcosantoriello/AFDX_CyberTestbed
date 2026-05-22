@@ -30,4 +30,9 @@ pip3 install -r requirements.txt
 
 
 ## License
-ANCAT components: LGPLv3 (original © 2022 Ipek Gökçe, modifications © 2026 Marco Santoriello)
+**ANCAT**: LGPLv3 (original © 2022 Ipek Gökçe, modifications © 2026 Marco Santoriello)
+
+**AFDX OMNeT++ module** (simulation model): LGPLv3
+Original © Ipek Gökçe, Emre Atik, https://github.com/badapplexx/AFDX
+Based on https://github.com/omnetpp-models/afdx
+Modifications © 2026 Marco Santoriello
