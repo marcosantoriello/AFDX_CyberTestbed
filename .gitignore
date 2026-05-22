@@ -1,0 +1,37 @@
+# ===== macOS =====
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+.AppleDouble
+.LSOverride
+
+# ===== Python =====
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.venv/
+*.egg-info/
+
+# ===== ANCAT outputs =====
+ancat/reports/
+ANCAT_figures_*/
+
+# ===== OMNeT++ simulation results =====
+afdx-module/afdx/simulations/results/
+*.vec
+*.vci
+*.sca
+
+# ===== OMNeT++ build artifacts =====
+afdx-module/afdx/src/*.o
+afdx-module/afdx/src/*.a
+*.out
+out/
+
+# ===== IDE =====
+.vscode/
+*.swp
+*.swo

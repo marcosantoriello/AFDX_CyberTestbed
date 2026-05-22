@@ -1,0 +1,3 @@
+[submodule "afdx-module"]
+	path = afdx-module
+	url = https://github.com/marcosantoriello/AFDX_Cyber.git
