@@ -6,6 +6,14 @@
 #
 # Looks for:  experiments/<experiment_name>.xlsx
 # Saves to:   reports/REP_<experiment_name>.pdf
+# Attack mode (optional): place an attack patch file alongside the experiment file.
+# Example: ./ANCAT_run.sh exp-T6a
+#          ./ANCAT_run.sh exp-T6a  (with experiments/exp-T6a_attack.ini present)
+#
+# Looks for:  experiments/<experiment_name>_attack.ini  (optional)
+# If found:   attack patch is appended to simulation arguments, overriding
+#             baseline parameters (e.g. attacker ES regulator type, timing).
+# If absent:  simulation runs in baseline mode with no changes.
 
 OMNET_PATH="$HOME/afdx-workspace/omnetpp-6.0"
 AFDX_PATH="$HOME/afdx-workspace/afdx-20220904"
@@ -15,7 +23,8 @@ EXP_NAME="${1:?Usage: ./ANCAT_run.sh <experiment_name>  (es: ./ANCAT_run.sh exp2
 
 XLSX_FILE="$ANCAT_PATH/experiments/${EXP_NAME}.xlsx"
 REPORT_NAME="REP_${EXP_NAME}"
-REPORT_PATH="$ANCAT_PATH/reports/"
+REPORT_PATH="$ANCAT_PATH/experiments/reports/"
+ATTACK_INI="$ANCAT_PATH/experiments/${EXP_NAME}_attack.ini"
 
 SIM_DIR="$AFDX_PATH/afdx/simulations"
 SRC_DIR="$AFDX_PATH/afdx/src"
@@ -36,12 +45,19 @@ echo ">> Report will be saved as: ${REPORT_NAME}.pdf"
 # PreProcessor
 python3 "$ANCAT_PATH/PreProcessor.py" -iPath "$XLSX_FILE" -oPath "$SIM_DIR/"
 
+if [ -f "$ATTACK_INI" ]; then
+    echo ">> Attack patch found: ${EXP_NAME}_attack.ini"
+    SIM_ARGS="AutoNetwork.ini \"$ATTACK_INI\""
+else
+    SIM_ARGS="AutoNetwork.ini"
+fi
+
 # Simulation
 SIM_SCRIPT=$(mktemp)
 cat > "$SIM_SCRIPT" << SIMEOF
 export DYLD_LIBRARY_PATH="$QLIB_DIR:\${DYLD_LIBRARY_PATH:-}"
 cd "$SIM_DIR"
-"$SIM_EXE" -m -u Cmdenv -c General -n "$SRC_DIR:$QLIB_DIR" AutoNetwork.ini
+"$SIM_EXE" -m -u Cmdenv -c General -n "$SRC_DIR:$QLIB_DIR" $SIM_ARGS
 exit
 SIMEOF
 
