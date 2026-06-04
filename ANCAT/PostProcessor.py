@@ -634,6 +634,15 @@ def saveReport():
             report.add_line_v2(f"Dropped Frame Count", dropped_packets)
             report.add_line_v2(f"Dropped Frame Percentage", dropped_packets / total_packets if 0 != total_packets else 0)
             #report.pageBreak()
+            # ARINC 664 P7 ES scheduling jitter compliance check
+            for rec_vl in records_vl:
+                if rvl == rec_vl.no and "ESSchedulingLatency" in rec_vl.name:
+                    jitter_max = rec_vl.getMax()
+                    jitter_bound = 500e-6
+                    compliant = "PASS" if jitter_max <= jitter_bound else "FAIL"
+                    report.add_line_v2(f"ESSchedulingLatency Max (Jitter)", f"{jitter_max:.6f} s")
+                    report.add_line_v2(f"  Max Admissible Jitter", f"{jitter_bound:.6f} s (500 us)")
+                    report.add_line_v2(f"  Compliance", compliant)
 
             # print histograms
             debugprint(f"      Will add Interarrival Histogram...")
@@ -711,6 +720,15 @@ def printStatistics():
         for rvl in rec_vls:
             i = rec_vls.index(rvl)
             print(f"    3.{i + 1}. VL{rvl} Statistics")
+            # ARINC 664 P7 §3.2.4.3 — ES scheduling jitter compliance check
+            for r in records_vl:
+                if rvl == r.no and "ESSchedulingLatency" in r.name:
+                    jitter_max = r.getMax()
+                    jitter_bound = 500e-6
+                    compliant = "PASS" if jitter_max <= jitter_bound else "FAIL"
+                    print(f"      ESSchedulingLatency Max (Jitter) : {jitter_max:.6f} s")
+                    print(f"        Max Admissible Jitter   : {jitter_bound:.6f} s (500 us)")
+                    print(f"        Compliance                     : {compliant}")
             for rn in rec_names:
                 for r in records_vl:
                     if rvl == r.no and rn == r.name:
