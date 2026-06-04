@@ -1,4 +1,6 @@
 __license__ = "LGPLv3"
+# Original: Copyright (C) 2022 Ipek Gokce — https://github.com/badapplexx/ANCAT
+# Modified: Copyright (C) 2026 Marco Santoriello
 
 import os
 import matplotlib
@@ -318,10 +320,17 @@ def saveFigures():
     counter = 0
     
     for rvl in rec_vls:
+        # Initialize per-VL accumulators. Some records may be absent for malicious ES
+        # modules that bypass standard AFDX pipeline stages (e.g. MaliciousRegulator_Flooding
+        # does not emit TrafficSource or ESBag statistics).
+        inter_packet_source = []
+        inter_packet_bagged = []
+        inter_packet_destination = []
+        e2e = []
+
         plt.figure(figsize=(fSize, fSize))
         plt.suptitle(f"Inter-arrival time histogram for VL{rvl}", y=0.05)
         debugprint(f"Histogram print for VL{rvl}")
-        # search in records having no == vn
         for rec in records:
             if rvl == rec.no and "VL" == rec.type:
                 if "ESBag" in rec.name:
@@ -332,7 +341,10 @@ def saveFigures():
                     inter_packet_destination = [rec.time[x + 1] - rec.time[x] for x in range(len(rec.time) - 1)]
                     e2e = rec.data
 
-        if len(inter_packet_destination) <= 1:
+        # Skip VL entirely if destination arrivals or source records are missing.
+        # This happens when the ES does not emit standard pipeline statistics.
+        if len(inter_packet_destination) <= 1 or len(inter_packet_source) <= 1:
+            plt.close("all")
             continue
 
         plt.subplot(4, 1, 1)
@@ -646,7 +658,10 @@ def saveReport():
 
             # print histograms
             debugprint(f"      Will add Interarrival Histogram...")
-            report.insertImage(f"{args.oPath}{figPath}VL{rvl}_InterArrival.png")
+            # Skip inter-arrival histogram if not generated 
+            interarrival_path = f"{args.oPath}{figPath}VL{rvl}_InterArrival.png"
+            if os.path.isfile(interarrival_path):
+                report.insertImage(interarrival_path)
             debugprint(f"        {args.oPath}{figPath}VL{rvl}_InterArrival.png added")
             #report.pageBreak()
 
@@ -660,7 +675,10 @@ def saveReport():
                         debugprint(f"        {args.oPath}{figPath}Histogram_{rec.name}VL{rvl}.png")
                         #report.pageBreak()
                         report.add_line(f"    Histogram_{rec.name}VL{rvl}")
-                        report.insertImage(f"{args.oPath}{figPath}Histogram_{rec.name}VL{rvl}.png")
+                        # Guard: image may not exist if VL statistics were incomplete.
+                        latency_path = f"{args.oPath}{figPath}Histogram_{rec.name}VL{rvl}.png"
+                        if os.path.isfile(latency_path):
+                            report.insertImage(latency_path)
 
             debugprint(f"      Will add all records...")
             for rn in rec_names:  # for all names
@@ -670,7 +688,12 @@ def saveReport():
                             debugprint(f"        {args.oPath}{figPath}{rec_vl.type}{rec_vl.no}_{rec_vl.name}.png")
                             #report.pageBreak()
                             report.add_line(f"    {rec_vl.type}{rec_vl.no}_{rec_vl.name}")
-                            report.insertRecordDetailText(rec_vl, f"{args.oPath}{figPath}{rec_vl.type}{rec_vl.no}_{rec_vl.name}.png")
+                            # Guard: image may not exist if VL statistics were incomplete.
+                            rec_path = f"{args.oPath}{figPath}{rec_vl.type}{rec_vl.no}_{rec_vl.name}.png"
+                            if os.path.isfile(rec_path):
+                                report.insertRecordDetailText(rec_vl, rec_path)
+                            else:
+                                report.insertRecordSummaryText(rec_vl, f"{rec_vl.type}{rec_vl.no}_{rec_vl.name}")
 
             print(f"    VL{rvl} is inserted")
 
