@@ -1,6 +1,8 @@
 //
 // Copyright (C) 2022 Ipek Gokce
 //
+// Modified: Copyright (C) 2026 Marco Santoriello
+//
 // SPDX-License-Identifier: LGPL-3.0-or-later
 //
 
@@ -23,6 +25,7 @@ enum RecordType_t
     ES_TOTAL_LATENCY_PER_VL,
     DROPPED_FRAMES_IN_QUEUE_PER_VL,
     DROPPED_FRAMES_TRAFFIC_POLICY_PER_VL,
+    DROPPED_FRAMES_FRAME_FILTER_PER_VL,
     TRAFFIC_SOURCE_PER_VL,
     SWITCH_QUEUEING_TIME_PER_SWITCH,
     SWITCH_QUEUE_LENGTH_PER_SWITCH,
@@ -125,6 +128,7 @@ private:
     RecordPerVL_t ESBaggingLatencyRecorder;
     RecordPerVL_t droppedFramesRecorderInQueue;
     RecordPerVL_t droppedFramesRecorderInTrafficPolicy;
+    RecordPerVL_t droppedFramesRecorderInFrameFilter;
     RecordPerVL_t swQueueLengthPVRecorder;
     RecordPerVL_t sourceRecorder;
     RecordPerVL_t e2eLatency;

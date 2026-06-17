@@ -1,6 +1,8 @@
 //
 // Copyright (C) 2022 Ipek Gokce
 //
+// Modified: Copyright (C) 2026 Marco Santoriello
+//
 // SPDX-License-Identifier: LGPL-3.0-or-later
 //
 
@@ -57,6 +59,11 @@ void NetworkStatistics::createRecorder(RecordType_t type, VLID_t vlid, int index
         case DROPPED_FRAMES_TRAFFIC_POLICY_PER_VL: {
             recorPerVl = &droppedFramesRecorderInTrafficPolicy;
             name = "DroppedFrameTraffPol_VL" + toHexString(vlid);
+            break;
+        }
+        case DROPPED_FRAMES_FRAME_FILTER_PER_VL: {
+            recorPerVl = &droppedFramesRecorderInFrameFilter;
+            name = "DroppedFrameFrameFilter_VL" + toHexString(vlid);
             break;
         }
         case TRAFFIC_SOURCE_PER_VL: {
@@ -225,6 +232,10 @@ void NetworkStatistics::record(RecordType_t type, VLID_t vlid, double value2Reco
         }
         case DROPPED_FRAMES_TRAFFIC_POLICY_PER_VL: {
             recorPerVl = &droppedFramesRecorderInTrafficPolicy;
+            break;
+        }
+        case DROPPED_FRAMES_FRAME_FILTER_PER_VL: {
+            recorPerVl = &droppedFramesRecorderInFrameFilter;
             break;
         }
         case TRAFFIC_SOURCE_PER_VL: {

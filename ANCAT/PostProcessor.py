@@ -635,16 +635,22 @@ def saveReport():
 
             # print total packet count and dropped ones
             total_packets = 0
-            dropped_packets = 0
+            dropped_tp = 0
+            dropped_ff = 0
             for rec_vl in records_vl:
-                if rvl == rec_vl.no and "ESBag" in rec_vl.name:  # count frames for that VL over ESBagLatency records
-                    total_packets = rec_vl.getCount()
-            for rec_vl in records_vl:
-                if rvl == rec_vl.no and "Dropped" in rec_vl.name:
-                    dropped_packets = rec_vl.getCount()
+                if rvl == rec_vl.no:
+                    if "DroppedFrameTraffPol" in rec_vl.name:
+                        dropped_tp = rec_vl.getCount()
+                    elif "DroppedFrameFrameFilter" in rec_vl.name:
+                        dropped_ff = rec_vl.getCount()
+            dropped_total = dropped_tp + dropped_ff
+
             report.add_line_v2(f"Total Frame Count", total_packets)
-            report.add_line_v2(f"Dropped Frame Count", dropped_packets)
-            report.add_line_v2(f"Dropped Frame Percentage", dropped_packets / total_packets if 0 != total_packets else 0)
+            report.add_line_v2(f"Dropped Frame Count (total)", dropped_total)
+            report.add_line_v2(f"  - Traffic Policy", dropped_tp)
+            report.add_line_v2(f"  - Frame Filter", dropped_ff)
+            report.add_line_v2(f"Dropped Frame Percentage",
+                dropped_total / total_packets if 0 != total_packets else 0)
             #report.pageBreak()
             # ARINC 664 P7 ES scheduling jitter compliance check
             for rec_vl in records_vl:
@@ -752,10 +758,22 @@ def printStatistics():
                     print(f"      ESSchedulingLatency Max (Jitter) : {jitter_max:.6f} s")
                     print(f"        Max Admissible Jitter   : {jitter_bound:.6f} s (500 us)")
                     print(f"        Compliance                     : {compliant}")
+            
+            # Per-VL drop breakdown: Traffic Policy vs Frame Filter
+            dropped_tp = sum(r.getCount() for r in records_vl
+                 if r.no == rvl and "DroppedFrameTraffPol" in r.name)
+            dropped_ff = sum(r.getCount() for r in records_vl
+                if r.no == rvl and "DroppedFrameFrameFilter" in r.name)
+            dropped_total = dropped_tp + dropped_ff
+            print(f"    Dropped (total): {dropped_total}")
+            print(f"      - Traffic Policy: {dropped_tp}")
+            print(f"      - Frame Filter: {dropped_ff}")
+
+            # Print all remaining per-VL records
             for rn in rec_names:
                 for r in records_vl:
                     if rvl == r.no and rn == r.name:
-                        printTextRecord(r, f"        {r.name} for {r.type}{r.no}")
+                        printTextRecord(r, f"  {r.name} for {r.type}{r.no}")
 
     print(f"==========================================================================================")
 
