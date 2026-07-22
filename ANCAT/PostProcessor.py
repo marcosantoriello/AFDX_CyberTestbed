@@ -639,7 +639,9 @@ def saveReport():
             dropped_ff = 0
             for rec_vl in records_vl:
                 if rvl == rec_vl.no:
-                    if "DroppedFrameTraffPol" in rec_vl.name:
+                    if "ESBag" in rec_vl.name:  # use ESBag records to count all frames for this VL
+                        total_packets += rec_vl.getCount()
+                    elif "DroppedFrameTraffPol" in rec_vl.name:
                         dropped_tp = rec_vl.getCount()
                     elif "DroppedFrameFrameFilter" in rec_vl.name:
                         dropped_ff = rec_vl.getCount()
