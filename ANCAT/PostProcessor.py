@@ -52,6 +52,16 @@ def withUnit(value, unit):
     return f"{value} {unit}" if unit else value
 
 
+def ylabelForRecordName(name):
+    if "QueueLength" in name:
+        return "Queue Length (bit)"
+    if "Credit" in name:
+        return "Credit (bit)"
+    if unitForRecordName(name) == "s":
+        return "Time (s)"
+    return "Value"
+
+
 class Record:
     def __init__(self):
         self.index = -1
@@ -449,7 +459,7 @@ def saveFigures():
                 plt.grid(True)
                 plt.title(f"Queuing Time Per Switch and Port", y=1.0, pad=-14)
                 plt.xlabel("Time (s)")
-                plt.ylabel("Time (s)")
+                plt.ylabel("Packet count")
                 plt.hist(rec.data, #200,
                          # range=(min(rec.data), statistics.mean(rec.data) * 1.5),
                          color="black")
@@ -475,7 +485,7 @@ def saveFigures():
                 plt.subplot(3, 1, 1)
                 plt.grid(True)
                 plt.xlabel("Time (ms)")
-                plt.ylabel("Time (s)" if "QueueLength" not in rec.name else "Queue Length")
+                plt.ylabel(ylabelForRecordName(rec.name))
                 xdat = [xd for xd in rec.time if xd < time_range_small]  # select the data for max zoom level
                 ydat = rec.data[:len(xdat)]
                 plt.plot([1000 * x for x in xdat], ydat,
@@ -487,7 +497,7 @@ def saveFigures():
                 plt.subplot(3, 1, 2)
                 plt.grid(True)
                 plt.xlabel("Time (ms)")
-                plt.ylabel("Time (s)" if "QueueLength" not in rec.name else "Queue Length")
+                plt.ylabel(ylabelForRecordName(rec.name))
                 xdat = [xd for xd in rec.time if xd < time_range_medium]  # select the data for medium zoom level
                 ydat = rec.data[:len(xdat)]
                 plt.plot([1000 * x for x in xdat], ydat,
@@ -499,7 +509,7 @@ def saveFigures():
                 plt.subplot(3, 1, 3)
                 plt.grid(True)
                 plt.xlabel("Time (s)")
-                plt.ylabel("Time (s)" if "QueueLength" not in rec.name else "Queue Length")
+                plt.ylabel(ylabelForRecordName(rec.name))
                 plt.plot(rec.time, rec.data,  # plot the whole data
                          color="black",
                          linestyle="solid",
@@ -530,7 +540,7 @@ def saveFigures():
                 plt.subplot(3, 1, 1)
                 plt.grid(True)
                 plt.xlabel("Time (ms)")
-                plt.ylabel("Time (s)" if "QueueLength" not in orec.name else "Queue Length")
+                plt.ylabel(ylabelForRecordName(orec.name))
                 xdat = [xd for xd in rec.time if xd < time_range_small]  # select the data for max zoom level
                 ydat = rec.data[:len(xdat)]
                 plt.plot([1000 * x for x in xdat], ydat,
@@ -542,7 +552,7 @@ def saveFigures():
                 plt.subplot(3, 1, 2)
                 plt.grid(True)
                 plt.xlabel("Time (ms)")
-                plt.ylabel("Time (s)" if "QueueLength" not in orec.name else "Queue Length")
+                plt.ylabel(ylabelForRecordName(orec.name))
                 xdat = [xd for xd in rec.time if xd < time_range_medium]  # select the data for medium zoom level
                 ydat = rec.data[:len(xdat)]
                 plt.plot([1000 * x for x in xdat], ydat,
@@ -554,7 +564,7 @@ def saveFigures():
                 plt.subplot(3, 1, 3)
                 plt.grid(True)
                 plt.xlabel("Time (s)")
-                plt.ylabel("Time (s)" if "QueueLength" not in orec.name else "Queue Length")
+                plt.ylabel(ylabelForRecordName(orec.name))
                 plt.plot(rec.time, rec.data,  # plot the whole data
                          linestyle="solid",
                          linewidth=0.5,
