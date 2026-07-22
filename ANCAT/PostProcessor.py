@@ -35,6 +35,23 @@ records_sw = []  # all records for sw
 records_vl = []  # all record for vl
 
 
+def unitForRecordName(name):
+    """Physical unit of a record's recorded values (not its time axis), inferred from its name."""
+    if "QueueLength" in name:
+        return "bit"
+    if "Credit" in name:
+        return "bit"
+    if "Dropped" in name:
+        return ""  # port/VL index, not a physical quantity - only .getCount() is meaningful
+    if "Latency" in name or "QueueingTime" in name or "TrafficSource" in name:
+        return "s"
+    return ""
+
+
+def withUnit(value, unit):
+    return f"{value} {unit}" if unit else value
+
+
 class Record:
     def __init__(self):
         self.index = -1
@@ -162,12 +179,13 @@ class Report(Canvas):
         self.save()
 
     def insertRecordDetailText(self, r, s):
+        unit = unitForRecordName(r.name)
         self.add_line_v2(f"    Data count", r.getCount())
-        self.add_line_v2(f"    Final time", r.time[-1])
-        self.add_line_v2(f"    Maximum", r.getMax())
-        self.add_line_v2(f"    Minimum", r.getMin())
+        self.add_line_v2(f"    Final time", f"{r.time[-1]} s")  # time axis is always simulation time, regardless of the record's own unit
+        self.add_line_v2(f"    Maximum", withUnit(r.getMax(), unit))
+        self.add_line_v2(f"    Minimum", withUnit(r.getMin(), unit))
         if 0 != r.getMean() and r.getCount() >= 2:
-            self.add_line_v2(f"    {r.getMeanText().title()}", r.getMean())
+            self.add_line_v2(f"    {r.getMeanText().title()}", withUnit(r.getMean(), unit))
             if "QueueLength" not in r.name:
                 self.add_line(f"    Simulation mean is in {r.getConfidence95():.1f}% band of true mean with 95% confidence")
                 self.add_line(f"    Simulation mean is in {r.getConfidence99():.1f}% band of true mean with 99% confidence")
@@ -175,10 +193,11 @@ class Report(Canvas):
         gc.collect()
 
     def insertRecordSummaryText(self, r, s):
+        unit = unitForRecordName(r.name)
         self.add_line(f"{s}:")
-        self.add_line_v2(f"    Maximum", r.getMax())
+        self.add_line_v2(f"    Maximum", withUnit(r.getMax(), unit))
         if 0 != r.getMean() and r.getCount() >= 2:
-            self.add_line_v2(f"    {r.getMeanText().title()}", r.getMean())
+            self.add_line_v2(f"    {r.getMeanText().title()}", withUnit(r.getMean(), unit))
             if "QueueLength" not in r.name:
                 self.add_line(f"    Simulation mean is in {r.getConfidence95():.1f}% band of true mean with 95% confidence")
         gc.collect()
@@ -576,9 +595,10 @@ def saveReport():
             total_packets += rec.getCount()
             total_time = max(total_time, rec.time[-1])
     report.add_line_v2(f"Overall Frame Count", total_packets)
-    report.add_line_v2(f"Overall Simulation Time", total_time)
+    report.add_line_v2(f"Overall Simulation Time", f"{total_time} s")
     report.add_line_v2(f"Overall Dropped Frame Count", droppedSum.getCount())
-    report.add_line_v2(f"Overall Dropped Frame Percentage", droppedSum.getCount()/total_packets)
+    report.add_line_v2(f"Overall Dropped Frame Percentage",
+        f"{100 * droppedSum.getCount() / total_packets:.4f} %" if 0 != total_packets else "0 %")
 
     # insert summary text
     for orec in overall_records:  # for all names in records
@@ -652,7 +672,7 @@ def saveReport():
             report.add_line_v2(f"  - Traffic Policy", dropped_tp)
             report.add_line_v2(f"  - Frame Filter", dropped_ff)
             report.add_line_v2(f"Dropped Frame Percentage",
-                dropped_total / total_packets if 0 != total_packets else 0)
+                f"{100 * dropped_total / total_packets:.4f} %" if 0 != total_packets else "0 %")
             #report.pageBreak()
             # ARINC 664 P7 ES scheduling jitter compliance check
             for rec_vl in records_vl:
