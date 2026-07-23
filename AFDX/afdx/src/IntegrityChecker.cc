@@ -2,11 +2,14 @@
 // Copyright (C) 2013 OpenSim Ltd.
 // Copyright (C) 2022 Ipek Gokce
 //
+// Modified: Copyright (C) 2026 Marco Santoriello
+//
 // SPDX-License-Identifier: LGPL-3.0-or-later
 //
 
 #include "IntegrityChecker.h"
 #include "AFDXMessage_m.h"
+#include "NetworkStatistics.h"
 
 namespace afdx {
 
@@ -67,6 +70,12 @@ void IntegrityChecker::handleMessage(cMessage *msg)
         send(afdxMsg, "out");
     }
     else {
+        // Record the drop only on the "A" copy to avoid double-counting
+        // due to the dual-redundant (A/B) network architecture.
+        if (0 == strcmp(this->getName(), "integrityCheckerA")) {
+            NetworkStatistics::getInstance()->createRecorder(DROPPED_FRAMES_INTEGRITY_CHECK_PER_VL, vlId);
+            NetworkStatistics::getInstance()->record(DROPPED_FRAMES_INTEGRITY_CHECK_PER_VL, vlId, 1.0);
+        }
         delete msg;
     }
 

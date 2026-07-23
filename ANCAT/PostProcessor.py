@@ -667,6 +667,7 @@ def saveReport():
             total_packets = 0
             dropped_tp = 0
             dropped_ff = 0
+            dropped_ic = 0
             for rec_vl in records_vl:
                 if rvl == rec_vl.no:
                     if "ESBag" in rec_vl.name:  # use ESBag records to count all frames for this VL
@@ -675,12 +676,15 @@ def saveReport():
                         dropped_tp = rec_vl.getCount()
                     elif "DroppedFrameFrameFilter" in rec_vl.name:
                         dropped_ff = rec_vl.getCount()
-            dropped_total = dropped_tp + dropped_ff
+                    elif "DroppedFrameIntegrityCheck" in rec_vl.name:
+                        dropped_ic = rec_vl.getCount()
+            dropped_total = dropped_tp + dropped_ff + dropped_ic
 
             report.add_line_v2(f"Total Frame Count", total_packets)
             report.add_line_v2(f"Dropped Frame Count (total)", dropped_total)
             report.add_line_v2(f"  - Traffic Policy", dropped_tp)
             report.add_line_v2(f"  - Frame Filter", dropped_ff)
+            report.add_line_v2(f"  - Integrity Check", dropped_ic)
             report.add_line_v2(f"Dropped Frame Percentage",
                 f"{100 * dropped_total / total_packets:.4f} %" if 0 != total_packets else "0 %")
             #report.pageBreak()
