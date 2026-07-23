@@ -1,6 +1,7 @@
 //
 // Copyright (C) 2013 OpenSim Ltd.
 // Copyright (C) 2022 Ipek Gokce
+// Modified (C) 2026 Marco Santoriello
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 //
@@ -10,7 +11,7 @@ package afdx;
 import ned.DatarateChannel;
 import afdx.Cable;
 //
-// This module represents an EndSystem device in an AFDX network. It has two 
+// This module represents an EndSystem device in an AFDX network. It has two
 // separate ethernet interfaces which should be attached to different networks
 //
 
@@ -18,6 +19,7 @@ module EndSystem
 {
     @display("i=device/device;bgb=243.47353,117.4275,white");
     int messageCount = default(0);
+    string regulatorType = default("RegulatorLogic");
 
     gates:
         inout ethPortA @labels(Cable);//@labels(eth100);
@@ -53,7 +55,7 @@ module EndSystem
         integrityCheckerB: IntegrityChecker {
             @display("p=188.89397,93.30907");
         }
-        regulatorLogic: RegulatorLogic {
+        regulatorLogic: <regulatorType> like IRegulatorLogic {
             @display("p=125.50738,41.476685");
         }
         redundancyChecker: RedundancyChecker {
