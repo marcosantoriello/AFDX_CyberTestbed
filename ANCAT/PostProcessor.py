@@ -380,31 +380,31 @@ def saveFigures():
         plt.grid(True)
         plt.title(f"At creation", y=1.0, pad=-14)
         plt.ylabel("Packet count")
-        plt.hist(inter_packet_source, 200,
-                 range=(min(inter_packet_source), statistics.mean(inter_packet_source) * 1.5),
-                 color="black")
+        plt.hist(inter_packet_source, 50,
+                 range=(min(inter_packet_source), max(inter_packet_source)),
+                 color="black", edgecolor="white")
         plt.subplot(4, 1, 2)
         plt.grid(True)
         plt.title(f"After bagging", y=1.0, pad=-14)
         plt.ylabel("Packet count")
-        plt.hist(inter_packet_bagged, 200,
-                 range=(min(inter_packet_bagged), statistics.mean(inter_packet_bagged) * 1.5),
-                 color="black")
+        plt.hist(inter_packet_bagged, 50,
+                 range=(min(inter_packet_bagged), max(inter_packet_bagged)),
+                 color="black", edgecolor="white")
         plt.subplot(4, 1, 3)
         plt.grid(True)
         plt.title(f"At destination", y=1.0, pad=-14)
         plt.ylabel("Packet count")
-        plt.hist(inter_packet_destination, 200,
-                 range=(min(inter_packet_destination), statistics.mean(inter_packet_destination) * 1.5),
-                 color="black")
+        plt.hist(inter_packet_destination, 50,
+                 range=(min(inter_packet_destination), max(inter_packet_destination)),
+                 color="black", edgecolor="white")
         plt.subplot(4, 1, 4)
         plt.grid(True)
         plt.title(f"E2E Latency", y=1.0, pad=-14)
         plt.xlabel("Time (s)")
         plt.ylabel("Packet count")
-        plt.hist(e2e, 200,
-                 range=(min(e2e), statistics.mean(e2e) * 1.5),
-                 color="black")
+        plt.hist(e2e, 50,
+                 range=(min(e2e), max(e2e)),
+                 color="black", edgecolor="white")
 
         plt.savefig(f"{args.oPath}{figPath}VL{rvl}_InterArrival")
         plt.clf()
@@ -431,9 +431,9 @@ def saveFigures():
                 plt.title(f"E2ELatency Per Destination ES", y=1.0, pad=-14)
                 plt.xlabel("Time (s)")
                 plt.ylabel("Packet count")
-                plt.hist(rec.data, 200,
-                         range=(min(rec.data), statistics.mean(rec.data) * 1.5),
-                         color="black")
+                plt.hist(rec.data, 50,
+                         range=(min(rec.data), max(rec.data)),
+                         color="black", edgecolor="white")
 
                 plt.savefig(f"{args.oPath}{figPath}Histogram_{rec.name}VL{rec.no}")
                 plt.clf()
