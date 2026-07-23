@@ -39,6 +39,8 @@ fi
 
 mkdir -p "$REPORT_PATH"
 
+cp "$ATTACK_INI" "$SIM_DIR/Attack.ini"
+
 echo ">> Running experiment: ${EXP_NAME}.xlsx"
 echo ">> Report will be saved as: ${REPORT_NAME}.pdf"
 
@@ -47,7 +49,7 @@ python3 "$ANCAT_PATH/PreProcessor.py" -iPath "$XLSX_FILE" -oPath "$SIM_DIR/"
 
 if [ -f "$ATTACK_INI" ]; then
     echo ">> Attack patch found: ${EXP_NAME}_attack.ini"
-    SIM_ARGS="AutoNetwork.ini \"$ATTACK_INI\""
+    SIM_ARGS="AutoNetwork.ini Attack.ini"
 else
     SIM_ARGS="AutoNetwork.ini"
 fi
