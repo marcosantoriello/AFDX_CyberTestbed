@@ -3,6 +3,8 @@
 //
 // Copyright (C) 2006-2015 OpenSim Ltd.
 //
+// Modified (C) 2026 Marco Santoriello
+//
 // This file is distributed WITHOUT ANY WARRANTY. See the file
 // `license' for details on this and other legal matters.
 //
@@ -21,6 +23,9 @@ Define_Module(PassiveQueue);
 PassiveQueue::~PassiveQueue()
 {
     delete selectionStrategy;
+#ifdef AFDX_PQ
+    cancelAndDelete(dispatchCheckMsg);
+#endif
 }
 
 void PassiveQueue::initialize()
@@ -28,6 +33,11 @@ void PassiveQueue::initialize()
     capacity = par("capacity");
     queue.setName("queue");
     fifo = par("fifo");
+#ifdef AFDX_PQ
+    perVLPriority = par("perVLPriority");
+    if (perVLPriority)
+        dispatchCheckMsg = new cMessage("txq-dispatch-check");
+#endif
 
     selectionStrategy = SelectionStrategy::create(par("sendingAlgorithm"), this, false);
     if (!selectionStrategy) {
@@ -57,6 +67,18 @@ void PassiveQueue::initialize()
 
 void PassiveQueue::handleMessage(cMessage *msg)
 {
+#ifdef AFDX_PQ
+    // Fires after every same-instant arrival has already been enqueued into
+    // queuesByVL (see the perVLPriority branch below); only now is it safe to pick
+    // the actual highest-priority (lowest VLID) job and dispatch it.
+    if (perVLPriority && msg == dispatchCheckMsg) {
+        int k = selectionStrategy->select();
+        if (k >= 0 && length() > 0)
+            request(k);
+        return;
+    }
+#endif
+
     Job *job = check_and_cast<Job*>(msg);
 
 #ifdef AFDX_PQ
@@ -67,7 +89,7 @@ void PassiveQueue::handleMessage(cMessage *msg)
 	#endif
 
     // check for container capacity
-    if (capacity >= 0 && queue.getLength() >= capacity) {
+    if (capacity >= 0 && length() >= capacity) {
         EV << "Queue full! Job dropped.\n";
         if (hasGUI()) {
             bubble("Dropped!");
@@ -89,6 +111,30 @@ void PassiveQueue::handleMessage(cMessage *msg)
     afdx::AFDXMessage *afdxMsg = check_and_cast<afdx::AFDXMessage*>(msg);
     if (isSWAPort) {
         job->setTimestamp();
+    }
+#endif
+
+#ifdef AFDX_PQ
+    if (perVLPriority) {
+        // Always enqueue, even if a server looks idle right now: dispatch is decided
+        // later by dispatchCheckMsg, once every same-instant arrival is in queuesByVL.
+        queuesByVL[afdxMsg->getVirtualLinkId()].insert(job);
+        if (isSWAPort) {
+            int qLen = afdx::NetworkStatistics::getInstance()->getQueueLengthCountInBit(sw);
+            afdx::NetworkStatistics::getInstance()->record(afdx::SWITCH_QUEUE_LENGTH_PER_SWITCH, sw, qLen);
+            afdx::NetworkStatistics::getInstance()->record(afdx::SWITCH_QUEUE_LENGTH_PER_SW_PER_PORT, sw, qLen,
+                    this->swPortIndex);
+
+            afdx::NetworkStatistics::getInstance()->increaseQueueLengthCountInBit(sw, afdxMsg->getBitLength());
+            qLen = afdx::NetworkStatistics::getInstance()->getQueueLengthCountInBit(sw);
+
+            afdx::NetworkStatistics::getInstance()->record(afdx::SWITCH_QUEUE_LENGTH_PER_SWITCH, sw, qLen);
+            afdx::NetworkStatistics::getInstance()->record(afdx::SWITCH_QUEUE_LENGTH_PER_SW_PER_PORT, sw, qLen,
+                    this->swPortIndex);
+        }
+        if (!dispatchCheckMsg->isScheduled())
+            scheduleAt(simTime(), dispatchCheckMsg);
+        return;
     }
 #endif
 
@@ -145,25 +191,52 @@ void PassiveQueue::handleMessage(cMessage *msg)
 void PassiveQueue::refreshDisplay() const
 {
     // change the icon color
-    getDisplayString().setTagArg("i", 1, queue.isEmpty() ? "" : "cyan");
+    getDisplayString().setTagArg("i", 1, const_cast<PassiveQueue*>(this)->length() == 0 ? "" : "cyan");
 }
 
 int PassiveQueue::length()
 {
+#ifdef AFDX_PQ
+    if (perVLPriority) {
+        int total = 0;
+        for (auto &entry : queuesByVL)
+            total += entry.second.getLength();
+        return total;
+    }
+#endif
     return queue.getLength();
 }
 
 void PassiveQueue::request(int gateIndex)
 {
     Enter_Method("request()!");
-    ASSERT(!queue.isEmpty());
-    Job *job;
+    ASSERT(length() > 0);
+    Job *job = nullptr;
 
 #ifdef AFDX_PQ
     NetworkStatistics::SwitchDefinition sw = NetworkStatistics::getInstance()->getSwitchDefinition(this);
     bool isSWAPort = NetworkStatistics::getInstance()->isInSwitchAPort(sw);
 #endif
 
+#ifdef AFDX_PQ
+    if (perVLPriority) {
+        // queuesByVL is a std::map, so iterating it visits VLIDs in ascending
+        // order: this is what gives static priority to the lowest VLID
+        for (auto &entry : queuesByVL) {
+            if (!entry.second.isEmpty()) {
+                job = (Job*) entry.second.pop();
+                break;
+            }
+        }
+    }
+    else if (fifo) {
+        job = (Job*) queue.pop();
+    }
+    else {
+        job = (Job*) queue.back();
+        queue.remove(job); // FIXME this may have bad performance as remove uses linear search
+    }
+#else
     if (fifo) {
         job = (Job*) queue.pop();
     }
@@ -171,6 +244,7 @@ void PassiveQueue::request(int gateIndex)
         job = (Job*) queue.back();
         queue.remove(job); // FIXME this may have bad performance as remove uses linear search
     }
+#endif
 #ifdef AFDX_PQ
     if (isSWAPort) {
         simtime_t d = simTime() - job->getTimestamp();

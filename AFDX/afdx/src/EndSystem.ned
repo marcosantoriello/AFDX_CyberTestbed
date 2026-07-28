@@ -44,9 +44,11 @@ module EndSystem
             @display("p=218.0246,33.682297");
         }
         txQueueA: PassiveQueue {
+            perVLPriority = true;
             @display("p=182.74922,16.385983");
         }
         txQueueB: PassiveQueue {
+            perVLPriority = true;
             @display("p=184.11472,43.46837");
         }
         integrityCheckerA: IntegrityChecker {
