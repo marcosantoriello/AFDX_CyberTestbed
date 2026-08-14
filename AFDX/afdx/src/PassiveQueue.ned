@@ -1,6 +1,8 @@
 //
 // Copyright (C) 2013 OpenSim Ltd.
 //
+// Modified (C) 2026 Marco Santoriello
+//
 // SPDX-License-Identifier: LGPL-3.0-or-later
 //
  
@@ -27,6 +29,7 @@ simple PassiveQueue
 
         int capacity = default(-1);  // negative capacity means unlimited queue
         bool fifo = default(true);   // whether the module works as a queue (fifo=true) or a stack (fifo=false)
+        bool perVLPriority = default(false); // if true, dequeue by ascending VLID (static priority) instead of arrival order
         string sendingAlgorithm @enum("priority","random","roundRobin","minDelay") = default("priority");
                                      // how the queue tries to find a suitable server for an incoming job
     gates:
