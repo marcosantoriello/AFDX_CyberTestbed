@@ -341,6 +341,7 @@ iniStringConfigTable = ""
 
 for s in SWSet:
     registeredVLs = []
+    portToVLs = {}  # port_index -> set of VL-IDs legitimately entering this switch on that port
     fileName = f"{s}.txt"
     f = open(simulationDirectory + fileName, "w")
     f.write(f"*** VL ID - Ports Mapping for Switch {s.id} ***\n")
@@ -363,11 +364,23 @@ for s in SWSet:
         if len(ports) != 0 and e.vlid not in registeredVLs:
             f.write(f"{e.vlid} : {ports}\n")
             registeredVLs.append(e.vlid)
+            portToVLs.setdefault(source_index, set()).add(e.vlid)
 
     f.close()
     print(">>" + simulationDirectory + fileName + " is created")
     iniStringConfigTable += f"*.SwitchA[{s.id}].switchFabric.router.configTableName = \"{fileName}\"\n"
     iniStringConfigTable += f"*.SwitchB[{s.id}].switchFabric.router.configTableName = \"{fileName}\"\n"
+
+    # VL ID admissibility per ingress port (ARINC 664P7 sec. 4.2.1), inverse of the mapping above
+    ingressFileName = f"{s}_ingress.txt"
+    fi = open(simulationDirectory + ingressFileName, "w")
+    fi.write(f"*** Ingress Port - Allowed VL IDs for Switch {s.id} ***\n")
+    for portIdx, vlids in portToVLs.items():
+        fi.write(f"{portIdx} : {{{', '.join(vlids)}}}\n")
+    fi.close()
+    print(">>" + simulationDirectory + ingressFileName + " is created")
+    iniStringConfigTable += f"*.SwitchA[{s.id}].switchPort[*].frameFilter.ingressVLTableName = \"{ingressFileName}\"\n"
+    iniStringConfigTable += f"*.SwitchB[{s.id}].switchPort[*].frameFilter.ingressVLTableName = \"{ingressFileName}\"\n"
 
 iniFile = open(simulationDirectory + iniFileName, 'a')
 iniFile.write("\n" + iniStringConfigTable)

@@ -66,6 +66,11 @@ void NetworkStatistics::createRecorder(RecordType_t type, VLID_t vlid, int index
             name = "DroppedFrameFrameFilter_VL" + toHexString(vlid);
             break;
         }
+        case DROPPED_FRAMES_VL_PORT_FILTER_PER_VL: {
+            recorPerVl = &droppedFramesRecorderInIngressPortFilter;
+            name = "DroppedFrameIngressPortFilter_VL" + toHexString(vlid);
+            break;
+        }
         case DROPPED_FRAMES_INTEGRITY_CHECK_PER_VL: {
             recorPerVl = &droppedFramesRecorderInIntegrityCheck;
             name = "DroppedFrameIntegrityCheck_VL" + toHexString(vlid);
@@ -241,6 +246,10 @@ void NetworkStatistics::record(RecordType_t type, VLID_t vlid, double value2Reco
         }
         case DROPPED_FRAMES_FRAME_FILTER_PER_VL: {
             recorPerVl = &droppedFramesRecorderInFrameFilter;
+            break;
+        }
+        case DROPPED_FRAMES_VL_PORT_FILTER_PER_VL: {
+            recorPerVl = &droppedFramesRecorderInIngressPortFilter;
             break;
         }
         case DROPPED_FRAMES_INTEGRITY_CHECK_PER_VL: {

@@ -26,6 +26,7 @@ enum RecordType_t
     DROPPED_FRAMES_IN_QUEUE_PER_VL,
     DROPPED_FRAMES_TRAFFIC_POLICY_PER_VL,
     DROPPED_FRAMES_FRAME_FILTER_PER_VL,
+    DROPPED_FRAMES_VL_PORT_FILTER_PER_VL,
     DROPPED_FRAMES_INTEGRITY_CHECK_PER_VL,
     TRAFFIC_SOURCE_PER_VL,
     SWITCH_QUEUEING_TIME_PER_SWITCH,
@@ -130,6 +131,7 @@ private:
     RecordPerVL_t droppedFramesRecorderInQueue;
     RecordPerVL_t droppedFramesRecorderInTrafficPolicy;
     RecordPerVL_t droppedFramesRecorderInFrameFilter;
+    RecordPerVL_t droppedFramesRecorderInIngressPortFilter;
     RecordPerVL_t droppedFramesRecorderInIntegrityCheck;
     RecordPerVL_t swQueueLengthPVRecorder;
     RecordPerVL_t sourceRecorder;

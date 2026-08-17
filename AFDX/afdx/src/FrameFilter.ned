@@ -18,6 +18,7 @@ package afdx;
 simple FrameFilter
 {
     @display("i=block/filter");
+    string ingressVLTableName = default("SwitchPorts.txt");
     gates:
         input in;
         output out;

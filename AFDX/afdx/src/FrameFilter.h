@@ -9,6 +9,7 @@
 #ifndef __FRAMEFILTER_H__
 #define __FRAMEFILTER_H__
 
+#include <map>
 #include "AFDXDefs.h"
 #include "AFDXMessage_m.h"
 #include "NetworkStatistics.h"
@@ -20,6 +21,12 @@ class FrameFilter : public cSimpleModule
 private:
     static const int L_MIN = 64; // IEEE 802.3 minimum frame size (bytes)
     static const int L_MAX = 1518; // ARINC 664 P7 maximum frame size (bytes)
+
+    typedef std::multimap<int, int> PortToVLIdMap_t;
+    PortToVLIdMap_t allowedVLsByPort;
+    int swPortIndex;
+    std::string ingressVLTableName;
+    void getIngressPortToVLMappings(PortToVLIdMap_t &mapping, const char *fileName);
 
 protected:
     virtual void initialize();

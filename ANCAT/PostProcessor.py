@@ -668,6 +668,7 @@ def saveReport():
             dropped_tp = 0
             dropped_ff = 0
             dropped_ic = 0
+            dropped_ipf = 0
             for rec_vl in records_vl:
                 if rvl == rec_vl.no:
                     if "ESBag" in rec_vl.name:  # use ESBag records to count all frames for this VL
@@ -678,13 +679,16 @@ def saveReport():
                         dropped_ff = rec_vl.getCount()
                     elif "DroppedFrameIntegrityCheck" in rec_vl.name:
                         dropped_ic = rec_vl.getCount()
-            dropped_total = dropped_tp + dropped_ff + dropped_ic
+                    elif "DroppedFrameIngressPortFilter" in rec_vl.name:
+                        dropped_ipf = rec_vl.getCount()
+            dropped_total = dropped_tp + dropped_ff + dropped_ic + dropped_ipf
 
             report.add_line_v2(f"Total Frame Count", total_packets)
             report.add_line_v2(f"Dropped Frame Count (total)", dropped_total)
             report.add_line_v2(f"  - Traffic Policy", dropped_tp)
             report.add_line_v2(f"  - Frame Filter", dropped_ff)
             report.add_line_v2(f"  - Integrity Check", dropped_ic)
+            report.add_line_v2(f"  - Ingress Port Filter", dropped_ipf)
             report.add_line_v2(f"Dropped Frame Percentage",
                 f"{100 * dropped_total / total_packets:.4f} %" if 0 != total_packets else "0 %")
             #report.pageBreak()
@@ -795,15 +799,18 @@ def printStatistics():
                     print(f"        Max Admissible Jitter   : {jitter_bound:.6f} s (500 us)")
                     print(f"        Compliance                     : {compliant}")
             
-            # Per-VL drop breakdown: Traffic Policy vs Frame Filter
+            # Per-VL drop breakdown: Traffic Policy vs Frame Filter vs Ingress Port Filter
             dropped_tp = sum(r.getCount() for r in records_vl
                  if r.no == rvl and "DroppedFrameTraffPol" in r.name)
             dropped_ff = sum(r.getCount() for r in records_vl
                 if r.no == rvl and "DroppedFrameFrameFilter" in r.name)
-            dropped_total = dropped_tp + dropped_ff
+            dropped_ipf = sum(r.getCount() for r in records_vl
+                if r.no == rvl and "DroppedFrameIngressPortFilter" in r.name)
+            dropped_total = dropped_tp + dropped_ff + dropped_ipf
             print(f"    Dropped (total): {dropped_total}")
             print(f"      - Traffic Policy: {dropped_tp}")
             print(f"      - Frame Filter: {dropped_ff}")
+            print(f"      - Ingress Port Filter: {dropped_ipf}")
 
             # Print all remaining per-VL records
             for rn in rec_names:
