@@ -3,6 +3,7 @@ __license__ = "LGPLv3"
 # Modified: Copyright (C) 2026 Marco Santoriello
 
 import os
+import re
 import matplotlib
 import matplotlib.pyplot as plt
 from reportlab.pdfgen.canvas import Canvas
@@ -742,6 +743,30 @@ def saveReport():
                                 report.insertRecordSummaryText(rec_vl, f"{rec_vl.type}{rec_vl.no}_{rec_vl.name}")
 
             print(f"    VL{rvl} is inserted")
+
+    # per Destination End System statistics section(s) #######################
+    print(f"Creating pdf report - PerDestinationES Statistics")
+    if not args.summaryOnly:
+        delivered_by_es = {}  # es no. (str) -> {vl no. (str): Record}
+        for rec in records_vl:
+            m = re.fullmatch(r"LatencyAt#ES(\d+)", rec.name)
+            if m:
+                delivered_by_es.setdefault(m.group(1), {})[rec.no] = rec
+
+        rec_dest_es = sorted(delivered_by_es.keys(), key=int)
+
+        if rec_dest_es:
+            report.pageBreak()
+            report.add_heading_lvl1("4. Per-Destination End System Statistics")
+            for i, es_no in enumerate(rec_dest_es):
+                report.pageBreak()
+                report.add_heading_lvl2(f"4.{i + 1}. ES{es_no} Statistics")
+                per_vl = delivered_by_es[es_no]
+                total_delivered = sum(rec.getCount() for rec in per_vl.values())
+                report.add_line_v2(f"Total Frames Delivered", total_delivered)
+                for vl_no in sorted(per_vl.keys()):
+                    report.add_line_v2(f"  - VL{vl_no}", per_vl[vl_no].getCount())
+                print(f"    ES{es_no} is inserted")
 
     print(f"Saving report")
     # save
