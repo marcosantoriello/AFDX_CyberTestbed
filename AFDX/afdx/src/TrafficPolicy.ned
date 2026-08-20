@@ -17,7 +17,8 @@ simple TrafficPolicy
 {
     @display("i=block/bucket");
     int bandwidth = default(100); // for max token bucket calculation
-    double minJitter @unit(ms) = default(40us);   // maximum allowed jitter 
+    double minJitter @unit(ms) = default(40us);   // maximum allowed jitter
+    string configTableName = default("SwitchPolicing.txt"); // per-VL sigma/rho, read from an independent switch-resident table (ARINC 664P7 sec. 4.2.2), not trusted from the frame
     gates:
         input in;
         output out;

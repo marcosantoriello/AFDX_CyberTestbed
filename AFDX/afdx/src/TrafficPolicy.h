@@ -23,10 +23,17 @@ private:
     typedef double TokenCredit_t;
     typedef std::map<VirtualLinkId_t, TokenCredit_t> TokenBucketMap_t;
     typedef std::map<VirtualLinkId_t, double> LastTimeRecordMap_t;
+    // VLID -> {sigma_bit, rho_bit}, read once from an independent switch-resident
+    // table at initialize(), never from the frame being policed.
+    typedef std::map<VirtualLinkId_t, std::pair<int, int>> PolicingTableMap_t;
     TokenBucketMap_t tokenBucket;
     LastTimeRecordMap_t lastTime;
+    PolicingTableMap_t policingTable;
     double minJitter;
     int bandwidthMbps;
+    std::string configTableName;
+
+    void getPolicingTable(PolicingTableMap_t &table, const char *fileName);
 
 protected:
     virtual void initialize();

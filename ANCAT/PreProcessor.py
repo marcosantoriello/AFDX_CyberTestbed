@@ -339,12 +339,24 @@ iniFile.close()
 ################# CREATE and FILL config tables #################
 iniStringConfigTable = ""
 
+
+def rho_to_bps(rho):
+    s = str(rho).strip()
+    for suffix, factor in (("Gbps", 1e9), ("Mbps", 1e6), ("Kbps", 1e3), ("bps", 1)):
+        if s.lower().endswith(suffix.lower()):
+            return float(s[:-len(suffix)]) * factor
+    return float(s)
+
+
 for s in SWSet:
     registeredVLs = []
     portToVLs = {}  # port_index -> set of VL-IDs legitimately entering this switch on that port
     fileName = f"{s}.txt"
     f = open(simulationDirectory + fileName, "w")
     f.write(f"*** VL ID - Ports Mapping for Switch {s.id} ***\n")
+    policingFileName = f"{s}_policing.txt"
+    fp = open(simulationDirectory + policingFileName, "w")
+    fp.write(f"*** VL ID - Policing (sigma_bit, rho_bit) for Switch {s.id} ***\n")
     for e in ESInfoList:
         ports = set()
         psource = find_path(connGraph, s, e.source)
@@ -363,6 +375,10 @@ for s in SWSet:
                     break
         if len(ports) != 0 and e.vlid not in registeredVLs:
             f.write(f"{e.vlid} : {ports}\n")
+            # written as plain integers: TrafficPolicy truncates both to int anyway
+            # (as it always did when reading them off the frame), and an integer literal
+            # leaves no room for a locale/format surprise on the C++ parsing side.
+            fp.write(f"{e.vlid} : {{{int(float(e.sigma))},{int(rho_to_bps(e.rho))}}}\n")
             registeredVLs.append(e.vlid)
             portToVLs.setdefault(source_index, set()).add(e.vlid)
 
@@ -370,6 +386,11 @@ for s in SWSet:
     print(">>" + simulationDirectory + fileName + " is created")
     iniStringConfigTable += f"*.SwitchA[{s.id}].switchFabric.router.configTableName = \"{fileName}\"\n"
     iniStringConfigTable += f"*.SwitchB[{s.id}].switchFabric.router.configTableName = \"{fileName}\"\n"
+
+    fp.close()
+    print(">>" + simulationDirectory + policingFileName + " is created")
+    iniStringConfigTable += f"*.SwitchA[{s.id}].switchPort[*].trafficPolicy.configTableName = \"{policingFileName}\"\n"
+    iniStringConfigTable += f"*.SwitchB[{s.id}].switchPort[*].trafficPolicy.configTableName = \"{policingFileName}\"\n"
 
     # VL ID admissibility per ingress port (ARINC 664P7 sec. 4.2.1), inverse of the mapping above
     ingressFileName = f"{s}_ingress.txt"
